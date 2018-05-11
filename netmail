@@ -1,0 +1,11 @@
+#!/bin/bash
+# Checks if there is a working internet connection
+
+device=$(ls /sys/class/net | grep -v lo | head -n 1)
+
+if [[ $(cat /sys/class/net/$device/carrier) -eq 1 ]] ; then
+	if [[ $(ping -c 1 -w 1 -q www.ubuntu.com > /dev/null 2>&1 ; echo $?) -eq 0 ]] ; then exit 0 ; fi
+	exit 1
+fi
+
+exit 2

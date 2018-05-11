@@ -1,0 +1,120 @@
+#!/usr/bin/python3
+
+import os
+import re
+import gi
+import pickle
+import datetime as dt
+
+gi.require_version('Notify', '0.7')
+
+from gi.repository import GObject
+from gi.repository import Notify
+
+
+def check_mail(mailroot, accounts):
+
+	new			= re.compile(".*/new")
+	trash	 	= re.compile(".*/Trash/.*")
+	trashed		= re.compile(".*,T$")
+
+
+	for account in accounts:
+
+		mailboxes =	os.walk("{}/a/{}/mb".format(mailroot, account))
+
+		for folder, *rest in mailboxes:
+			if new.match(folder) and not trash.match(folder):
+
+				mails = os.listdir(folder)
+
+				for mail in mails:
+					if not trashed.match(mail):
+						accounts[account] +=1
+
+	return accounts
+
+
+def get_prev(histfile):
+
+	with open(histfile, "rb") as picklefile:
+		prev = pickle.load(picklefile)
+
+	return prev
+
+
+def set_prev(histfile, accounts):
+
+	with open(histfile, "wb") as picklefile:
+		pickle.dump(accounts, picklefile)
+
+
+def comp(newmail, oldmail):
+
+	for (_, new), (_, old) in zip(newmail.items(), oldmail.items()):
+
+		if new > old:
+			return False
+
+	return True
+
+
+class Notification(GObject.Object):
+
+
+	def __init__(self):
+
+		super(Notification, self).__init__()
+		Notify.init("Notification")
+
+
+	def send(self, title, text="", icon=""):
+
+		note = Notify.Notification.new(title, text, icon)
+		note.show()
+
+
+def main():
+
+	try:
+		import nmailconf as conf
+	except ModuleNotFoundError:
+		print("No configuration file found")
+		exit()
+
+	import sys
+
+	histfile	= conf.histfile
+	accounts	= conf.accounts
+	mailroot	= conf.mailroot
+	header		= conf.header
+
+	now = dt.datetime.now()
+	message = ("{}:{} - ").format(now.hour, now.minute)
+
+	accounts = check_mail(mailroot, accounts)
+
+	if comp(accounts, get_prev(histfile)) and "a" not in sys.argv:
+		return
+
+	for account, mails in accounts.items():
+
+		if mails:
+			account = re.sub("@.*", " " , account).title()
+			message = "{} {} {} ".format(message, account, mails)
+
+	if "g" in sys.argv:
+
+		note = Notification()
+		note.send(header, message)
+
+	else:
+
+		print(header)
+		print(message)
+
+	set_prev(histfile, accounts)
+
+
+if __name__ == "__main__":
+	main()

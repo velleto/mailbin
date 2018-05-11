@@ -1,0 +1,36 @@
+#!/bin/bash
+
+MYMAIL="/home/user/mailroot"
+
+function unlock {
+	echo Checking GPG key $1
+	gpg -dq $MYMAIL/.GPG_LOCK_$1.asc
+	if [[ $? != 0 ]] ; then
+		echo GPG $1 key needed.
+		exit
+	fi
+}
+
+function checknet {
+	if [[ ! $(netmail ; echo $?) -eq 0 ]] ; then
+		echo "smail Error: Not connected to the internet. Use 'rmail'"
+		exit
+	fi
+}
+
+case $1 in
+	personal)	email='personal@domain.tld';;
+	work)		email='work@company.tld';;
+	all)		email='peronsal@domain.tld, work@company.tld';;
+	*)			email='personal@domain.tld';;
+esac
+
+case $0 in
+	rmail)
+		unlock $email
+		mutt -F $MYMAIL/a/$email/mutt.rc
+		;;
+	smail)
+		offlineimap -oc $MYMAIL/off/offlineimap.rc -a $email
+		;;
+esac
