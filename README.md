@@ -9,5 +9,7 @@ I have writted a guide to creating such an infrastructure, and these scripts are
 The idea behind 'mailmanage' is to create symlinks 
 
 `$ ln -s mailmanage rmail`
+
 `$ ln -s mailmanage smail`
+
 `$ ln -s mailmanage fmail`

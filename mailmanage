@@ -33,4 +33,8 @@ case $0 in
     smail)
         offlineimap -oc $MYMAIL/off/offlineimap.rc -a $email
         ;;
+    fmail)
+        imapfilter -c /home/user/mailroot/fil/imapfilter.rc
+        smail personal
+        ;;
 esac

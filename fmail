@@ -1,5 +1,0 @@
-#!/bin/bash
-# filter mail using imapfilter, then sync
-
-imapfilter -c /home/user/mailroot/fil/imapfilter.rc
-smail personal
